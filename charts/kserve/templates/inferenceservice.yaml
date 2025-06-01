@@ -400,3 +400,26 @@ spec:
       path: /metrics
       interval: 15s
 {{- end }}
+---
+{{- if ne (len .Values.configFiles) 0 }}
+{{- $releaseName := .Release.Name }}
+{{- $releaseService := .Release.Service }}
+{{- range $containerPathKey,$configFileInfos := .Values.configFiles }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $releaseName }}-{{ $containerPathKey }}
+  labels:
+    app: {{ template "kserve.name" $ }}
+    chart: {{ template "kserve.chart" $ }}
+    release: {{ $releaseName }}
+    heritage: {{ $releaseService }}
+    createdBy: "KServe"
+data:
+{{- range $configFileKey,$configFileInfo := $configFileInfos }}
+  {{ $configFileInfo.containerFileName }}: |-
+{{ $configFileInfo.content | indent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
